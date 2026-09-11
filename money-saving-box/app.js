@@ -1,0 +1,10 @@
+const state=JSON.parse(localStorage.getItem('savingBox')||'null')||{goal:10000,saved:0,history:[]};
+const $=id=>document.getElementById(id);const money=n=>'฿'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+function save(){localStorage.setItem('savingBox',JSON.stringify(state));render()}
+function render(){const pct=Math.min(100,(state.saved/state.goal)*100||0);$('saved').textContent=money(state.saved);$('goalText').textContent=money(state.goal);$('percent').textContent=Math.round(pct)+'%';$('remaining').textContent=pct>=100?'🎉 Goal reached!':money(Math.max(0,state.goal-state.saved))+' remaining';$('bar').style.width=pct+'%';$('progress-ring')?.style.setProperty('--x',pct);$('count').textContent=state.history.length+' entr'+(state.history.length===1?'y':'ies');const ring=document.querySelector('.progress-ring');ring.style.background=`conic-gradient(#49a96b ${pct*3.6}deg,#e8eee9 ${pct*3.6}deg)`;const list=$('historyList');list.innerHTML=state.history.length?state.history.slice().reverse().map((x,i)=>`<div class="history-row"><span>${x.date}</span><strong>+ ${money(x.amount)} <button onclick="removeEntry(${state.history.length-1-i})">Remove</button></strong></div>`).join(''):'<p class="empty">No savings yet. Start with your first deposit!</p>';$('goal').value=state.goal}
+$('add').onclick=()=>{const n=Number($('amount').value);if(n>0){state.saved+=n;state.history.push({amount:n,date:new Date().toLocaleString()});$('amount').value='';save()}};
+document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{$('amount').value=b.dataset.add});
+$('setGoal').onclick=()=>{const n=Number($('goal').value);if(n>0){state.goal=n;save()}};
+$('reset').onclick=()=>{if(confirm('Reset all savings and history?')){state.saved=0;state.history=[];save()}};
+function removeEntry(i){state.saved=Math.max(0,state.saved-state.history[i].amount);state.history.splice(i,1);save()}
+render();
